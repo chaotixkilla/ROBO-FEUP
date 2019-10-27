@@ -15,16 +15,37 @@ class SimpleReactiveRobot {
         //sensor_msgs::LaserScan laserScan;
     
     public:
+        SimpleReactiveRobot() {
+            publisher = nh.advertise<geometry_msgs::Twist>("robot0/cmd_vel", 1000);
+            //subscriber = nh.subscribe("robot0/laser_0", 1000, laserCallback);
+        }
+
+        ~SimpleReactiveRobot() {
+
+        }
+
+        ros::Publisher getPublisher() {
+            return this->publisher;
+        }
 
 };
 
 int main(int argc, char** argv) {
     //Initialize the ROS system.
-    ros::init(argc, argv, "hello_ros");
+    ros::init(argc, argv, "simple_reactive_robot");
 
-    //Establish this program as a ROS node.
-    ros::NodeHandle nh;
+    SimpleReactiveRobot robot;
 
-    //Send some output as a log message.
-    ROS_INFO_STREAM("Hello, ROS!");
+    ros::Rate rate(2);
+    while(ros::ok()) {
+        geometry_msgs::Twist message;
+        message.linear.x = 0.1;
+        message.angular.z = 0.1;
+        robot.getPublisher().publish(message);
+
+        ROS_INFO_STREAM("Sending velocity command: " << "linear=" << message.linear.x << " angular:" << message.angular.z);
+        rate.sleep();
+    }
+
+    //ros::spin();
 }
