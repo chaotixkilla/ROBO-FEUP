@@ -65,7 +65,7 @@ class SimpleReactiveRobot {
 
             if(minimumDistance < this->laserScan.range_max) {
                 message.linear.x = 0.5;
-                float aux = (- 5 * (sin(this->degToRad(90 - this->getScanLineAngle(index))) - (minimumDistance - 1.5)) * message.linear.x);
+                float aux = (15 * (sin(this->degToRad(90 - this->getScanLineAngle(index))) - (minimumDistance - 0.5)) * message.linear.x);
                 ROS_INFO_STREAM("ANGULAR VELOCITY: " << aux);
                 message.angular.z = aux; //needs better formula
             } else {
