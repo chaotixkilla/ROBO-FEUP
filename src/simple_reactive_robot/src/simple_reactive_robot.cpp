@@ -8,7 +8,7 @@
 using namespace std;
 
 const float PI = 3.141592653589793238463;
-const float MIN_DISTANCE_TO_WALL = 0.5;
+const float MIN_DISTANCE_TO_WALL = 0.25;
 
 class SimpleReactiveRobot {
     private:
