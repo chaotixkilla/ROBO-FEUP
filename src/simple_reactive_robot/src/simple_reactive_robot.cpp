@@ -8,7 +8,12 @@
 using namespace std;
 
 const float PI = 3.141592653589793238463;
-const float MIN_DISTANCE_TO_WALL = 0.25;
+const float IDEAL_DISTANCE_TO_WALL = 0.15;
+const float MIN_DISTANCE_TO_WALL = 0.5 * IDEAL_DISTANCE_TO_WALL;
+const float MAX_LINEAR_VELOCITY = 0.5;
+const float MIN_LINEAR_VELOCITY = 0.1 * MAX_LINEAR_VELOCITY;
+const float MAX_ANGULAR_VELOCITY = 1.25;
+const float ROBOT_RADIUS = 0.1;
 
 class SimpleReactiveRobot {
     private:
@@ -65,6 +70,10 @@ class SimpleReactiveRobot {
             return shortestLaserScanIndex;
         }
 
+        bool isInFront(int shortestDistanceIndex) {
+            return getScanLineAngle(shortestDistanceIndex) < 80.0 && getScanLineAngle(shortestDistanceIndex) > -80.0;
+        }
+
         void laserCallback(const sensor_msgs::LaserScan &scan) {
             this->laserScan = scan;
             int index = this->getShortestLaserScanIndex();
@@ -72,7 +81,6 @@ class SimpleReactiveRobot {
 
             if(!alreadyCheckedSide) {
                 this->isWallLeftOnStart = isWallLeft();
-                //ROS_INFO_STREAM(getScanLineAngle(index));
                 alreadyCheckedSide = true;
             }
 
@@ -81,13 +89,35 @@ class SimpleReactiveRobot {
             geometry_msgs::Twist message;
 
             if(minimumDistance < this->laserScan.range_max) {
-                message.linear.x = 0.5;
-                float aux = (modifier * 10 * (sin(this->degToRad(90 - this->getScanLineAngle(index))) - (minimumDistance - MIN_DISTANCE_TO_WALL)) * message.linear.x);
-                message.angular.z = aux; //needs better formula
+
+                if(isInFront(index)) {
+                    message.linear.x = (minimumDistance - ROBOT_RADIUS - MIN_DISTANCE_TO_WALL) * MAX_LINEAR_VELOCITY * abs(sin(degToRad(getScanLineAngle(index)))) / sin(degToRad(80.0)) / (IDEAL_DISTANCE_TO_WALL - MIN_DISTANCE_TO_WALL);
+                } else {
+                    message.linear.x = MAX_LINEAR_VELOCITY;
+                }
+
+                if(message.linear.x > MAX_LINEAR_VELOCITY) {
+                    message.linear.x = MAX_LINEAR_VELOCITY;
+                } else if (message.linear.x < MIN_LINEAR_VELOCITY) {
+                    message.linear.x = MIN_LINEAR_VELOCITY;
+                }
+
+                //message.linear.x = 0.1;
+                float aux = (modifier * 10 * (sin(this->degToRad(90 - this->getScanLineAngle(index))) - (minimumDistance - ROBOT_RADIUS - IDEAL_DISTANCE_TO_WALL)) * message.linear.x);
+                message.angular.z = aux;
             } else {
-                message.linear.x = 0.5;
+                message.linear.x = 0.1;
                 message.angular.z = 0.0;
             }
+
+            if(message.angular.z > MAX_ANGULAR_VELOCITY) {
+                message.angular.z = MAX_ANGULAR_VELOCITY;
+            } else if (message.angular.z < -MAX_ANGULAR_VELOCITY) {
+                message.angular.z = -MAX_ANGULAR_VELOCITY;
+            }
+
+            ROS_INFO_STREAM(message.linear.x);
+            ROS_INFO_STREAM(this->getScanLineAngle(index));
 
             this->getPublisher().publish(message);
         }
