@@ -14,6 +14,7 @@ const float MAX_LINEAR_VELOCITY = 0.5;
 const float MIN_LINEAR_VELOCITY = 0.1 * MAX_LINEAR_VELOCITY;
 const float MAX_ANGULAR_VELOCITY = 1.25;
 const float ROBOT_RADIUS = 0.1;
+const float IN_FRONT_ANGLE = 80.0;
 
 class SimpleReactiveRobot {
     private:
@@ -71,7 +72,7 @@ class SimpleReactiveRobot {
         }
 
         bool isInFront(int shortestDistanceIndex) {
-            return getScanLineAngle(shortestDistanceIndex) < 80.0 && getScanLineAngle(shortestDistanceIndex) > -80.0;
+            return getScanLineAngle(shortestDistanceIndex) < IN_FRONT_ANGLE && getScanLineAngle(shortestDistanceIndex) > -IN_FRONT_ANGLE;
         }
 
         void laserCallback(const sensor_msgs::LaserScan &scan) {
@@ -91,7 +92,7 @@ class SimpleReactiveRobot {
             if(minimumDistance < this->laserScan.range_max) {
 
                 if(isInFront(index)) {
-                    message.linear.x = (minimumDistance - ROBOT_RADIUS - MIN_DISTANCE_TO_WALL) * MAX_LINEAR_VELOCITY * abs(sin(degToRad(getScanLineAngle(index)))) / sin(degToRad(80.0)) / (IDEAL_DISTANCE_TO_WALL - MIN_DISTANCE_TO_WALL);
+                    message.linear.x = (minimumDistance - ROBOT_RADIUS - MIN_DISTANCE_TO_WALL) * MAX_LINEAR_VELOCITY * abs(sin(degToRad(getScanLineAngle(index)))) / sin(degToRad(IN_FRONT_ANGLE)) / (IDEAL_DISTANCE_TO_WALL - MIN_DISTANCE_TO_WALL);
                 } else {
                     message.linear.x = MAX_LINEAR_VELOCITY;
                 }
