@@ -12,9 +12,9 @@ const float IDEAL_DISTANCE_TO_WALL = 0.15;
 const float MIN_DISTANCE_TO_WALL = 0.5 * IDEAL_DISTANCE_TO_WALL;
 const float MAX_LINEAR_VELOCITY = 0.5;
 const float MIN_LINEAR_VELOCITY = 0.1 * MAX_LINEAR_VELOCITY;
-const float MAX_ANGULAR_VELOCITY = 1.25;
+const float MAX_ANGULAR_VELOCITY = 1.2;
 const float ROBOT_RADIUS = 0.1;
-const float IN_FRONT_ANGLE = 80.0;
+const float IN_FRONT_ANGLE = 90.0;
 
 class SimpleReactiveRobot {
     private:
@@ -92,7 +92,7 @@ class SimpleReactiveRobot {
             if(minimumDistance < this->laserScan.range_max) {
 
                 if(isInFront(index)) {
-                    message.linear.x = (minimumDistance - ROBOT_RADIUS - MIN_DISTANCE_TO_WALL) * MAX_LINEAR_VELOCITY * abs(sin(degToRad(getScanLineAngle(index)))) / sin(degToRad(IN_FRONT_ANGLE)) / (IDEAL_DISTANCE_TO_WALL - MIN_DISTANCE_TO_WALL);
+                    message.linear.x = (minimumDistance - ROBOT_RADIUS) * MAX_LINEAR_VELOCITY * abs(sin(degToRad(getScanLineAngle(index)))) / sin(degToRad(IN_FRONT_ANGLE)) / (IDEAL_DISTANCE_TO_WALL);
                 } else {
                     message.linear.x = MAX_LINEAR_VELOCITY;
                 }
@@ -118,7 +118,6 @@ class SimpleReactiveRobot {
             }
 
             ROS_INFO_STREAM(message.linear.x);
-            ROS_INFO_STREAM(this->getScanLineAngle(index));
 
             this->getPublisher().publish(message);
         }
