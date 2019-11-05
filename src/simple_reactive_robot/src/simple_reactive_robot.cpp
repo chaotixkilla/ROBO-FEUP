@@ -132,8 +132,8 @@ class SimpleReactiveRobot {
                 message.angular.z = -MAX_ANGULAR_VELOCITY;
             }
 
-            ROS_INFO_STREAM(maxDistanceFromWall);
-            ROS_INFO_STREAM(minDistanceFromWall);
+            //ROS_INFO_STREAM(maxDistanceFromWall);
+            //ROS_INFO_STREAM(minDistanceFromWall);
 
             this->getPublisher().publish(message);
         }
