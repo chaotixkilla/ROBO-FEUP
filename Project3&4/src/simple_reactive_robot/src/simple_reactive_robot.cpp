@@ -8,12 +8,12 @@
 using namespace std;
 
 const float PI = 3.141592653589793238463;
-const float IDEAL_DISTANCE_TO_WALL = 0.15;
+const float IDEAL_DISTANCE_TO_WALL = 1;
 const float MIN_DISTANCE_TO_WALL = 0.5 * IDEAL_DISTANCE_TO_WALL;
 const float MAX_LINEAR_VELOCITY = 0.5;
 const float MIN_LINEAR_VELOCITY = 0.1 * MAX_LINEAR_VELOCITY;
 const float MAX_ANGULAR_VELOCITY = 1.25;
-const float ROBOT_RADIUS = 0.1;
+const float ROBOT_RADIUS = 0.2;
 
 class SimpleReactiveRobot {
     private:
@@ -105,6 +105,16 @@ class SimpleReactiveRobot {
                 //message.linear.x = 0.1;
                 float aux = (modifier * 10 * (sin(this->degToRad(90 - this->getScanLineAngle(index))) - (minimumDistance - ROBOT_RADIUS - IDEAL_DISTANCE_TO_WALL)) * message.linear.x);
                 message.angular.z = aux;
+
+                /*float print1 = sin(this->degToRad(90 - this->getScanLineAngle(index)));
+                float print2 = minimumDistance - ROBOT_RADIUS - IDEAL_DISTANCE_TO_WALL;
+
+                ROS_INFO_STREAM("sin(this->degToRad(90 - this->getScanLineAngle(index))");
+                ROS_INFO_STREAM(print1);
+                ROS_INFO_STREAM("minimumDistance - ROBOT_RADIUS - IDEAL_DISTANCE_TO_WALL");
+                ROS_INFO_STREAM(print2);
+                ROS_INFO_STREAM("ANGULAR VALUE BEFORE LIMITATION");
+                ROS_INFO_STREAM(aux);*/
             } else {
                 message.linear.x = 0.1;
                 message.angular.z = 0.0;
@@ -115,9 +125,6 @@ class SimpleReactiveRobot {
             } else if (message.angular.z < -MAX_ANGULAR_VELOCITY) {
                 message.angular.z = -MAX_ANGULAR_VELOCITY;
             }
-
-            ROS_INFO_STREAM(message.linear.x);
-            ROS_INFO_STREAM(this->getScanLineAngle(index));
 
             this->getPublisher().publish(message);
         }
