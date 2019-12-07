@@ -9,11 +9,11 @@ using namespace std;
 
 const float PI = 3.141592653589793238463;
 const float IDEAL_DISTANCE_TO_WALL = 0.15;
-const float MIN_DISTANCE_TO_WALL = 0.5 * IDEAL_DISTANCE_TO_WALL;
 const float MAX_LINEAR_VELOCITY = 0.5;
 const float MIN_LINEAR_VELOCITY = 0.1 * MAX_LINEAR_VELOCITY;
-const float MAX_ANGULAR_VELOCITY = 1.25;
+const float MAX_ANGULAR_VELOCITY = 1.2;
 const float ROBOT_RADIUS = 0.1;
+const float IN_FRONT_ANGLE = 90.0;
 
 class SimpleReactiveRobot {
     private:
@@ -23,12 +23,18 @@ class SimpleReactiveRobot {
         sensor_msgs::LaserScan laserScan;
         bool isWallLeftOnStart;
         bool alreadyCheckedSide;
+        float maxDistanceFromWall;
+        float minDistanceFromWall;
+        bool isNextToWall;
     
     public:
         SimpleReactiveRobot() {
             publisher = nh.advertise<geometry_msgs::Twist>("robot0/cmd_vel", 1000);
             subscriber = nh.subscribe("robot0/laser_0", 1000, &SimpleReactiveRobot::laserCallback, this);
             alreadyCheckedSide = false;
+            maxDistanceFromWall = 0;
+            minDistanceFromWall = 5;
+            isNextToWall = false;
         }
 
         ~SimpleReactiveRobot() {
@@ -71,13 +77,13 @@ class SimpleReactiveRobot {
         }
 
         bool isInFront(int shortestDistanceIndex) {
-            return getScanLineAngle(shortestDistanceIndex) < 80.0 && getScanLineAngle(shortestDistanceIndex) > -80.0;
+            return getScanLineAngle(shortestDistanceIndex) < IN_FRONT_ANGLE && getScanLineAngle(shortestDistanceIndex) > -IN_FRONT_ANGLE;
         }
 
         void laserCallback(const sensor_msgs::LaserScan &scan) {
             this->laserScan = scan;
             int index = this->getShortestLaserScanIndex();
-            float minimumDistance = this->laserScan.ranges[index];
+            float currentDistance = this->laserScan.ranges[index];
 
             if(!alreadyCheckedSide) {
                 this->isWallLeftOnStart = isWallLeft();
@@ -88,10 +94,20 @@ class SimpleReactiveRobot {
 
             geometry_msgs::Twist message;
 
-            if(minimumDistance < this->laserScan.range_max) {
+            if(currentDistance < this->laserScan.range_max) {
+
+                if((currentDistance - ROBOT_RADIUS) <= 2 * IDEAL_DISTANCE_TO_WALL){
+                    isNextToWall = true;
+                }
+                if(isNextToWall){
+                    if((currentDistance - ROBOT_RADIUS) < minDistanceFromWall)
+                    minDistanceFromWall = (currentDistance - ROBOT_RADIUS);
+                    if((currentDistance - ROBOT_RADIUS) > maxDistanceFromWall)
+                    maxDistanceFromWall = (currentDistance - ROBOT_RADIUS);
+                }
 
                 if(isInFront(index)) {
-                    message.linear.x = (minimumDistance - ROBOT_RADIUS - MIN_DISTANCE_TO_WALL) * MAX_LINEAR_VELOCITY * abs(sin(degToRad(getScanLineAngle(index)))) / sin(degToRad(80.0)) / (IDEAL_DISTANCE_TO_WALL - MIN_DISTANCE_TO_WALL);
+                    message.linear.x = (currentDistance - ROBOT_RADIUS) * MAX_LINEAR_VELOCITY * abs(sin(degToRad(getScanLineAngle(index)))) / sin(degToRad(IN_FRONT_ANGLE)) / (IDEAL_DISTANCE_TO_WALL);
                 } else {
                     message.linear.x = MAX_LINEAR_VELOCITY;
                 }
@@ -103,7 +119,7 @@ class SimpleReactiveRobot {
                 }
 
                 //message.linear.x = 0.1;
-                float aux = (modifier * 10 * (sin(this->degToRad(90 - this->getScanLineAngle(index))) - (minimumDistance - ROBOT_RADIUS - IDEAL_DISTANCE_TO_WALL)) * message.linear.x);
+                float aux = (modifier * 10 * (sin(this->degToRad(90 - this->getScanLineAngle(index))) - (currentDistance - ROBOT_RADIUS - IDEAL_DISTANCE_TO_WALL)) * message.linear.x);
                 message.angular.z = aux;
             } else {
                 message.linear.x = 0.1;
@@ -116,8 +132,8 @@ class SimpleReactiveRobot {
                 message.angular.z = -MAX_ANGULAR_VELOCITY;
             }
 
-            ROS_INFO_STREAM(message.linear.x);
-            ROS_INFO_STREAM(this->getScanLineAngle(index));
+            //ROS_INFO_STREAM(maxDistanceFromWall);
+            //ROS_INFO_STREAM(minDistanceFromWall);
 
             this->getPublisher().publish(message);
         }
