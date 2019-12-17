@@ -22,7 +22,10 @@ include_directories(
 )
 
 add_executable(simple_reactive_robot 
+    src/main.cpp
+    src/utils.cpp
     src/simple_reactive_robot.cpp
+    src/wall_following.cpp
 )
 
 target_link_libraries(
