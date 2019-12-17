@@ -3,7 +3,7 @@
 
 #include "ros/ros.h"
 #include <geometry_msgs/Twist.h>
-#include "wall_following.h"
+#include "wall_following.hpp"
 
 class SimpleReactiveRobot
 {

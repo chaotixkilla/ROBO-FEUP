@@ -1,7 +1,7 @@
 #include "ros/ros.h"
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/Twist.h>
-#include "utils.h"
+#include "utils.hpp"
 
 const float IDEAL_DISTANCE_TO_WALL = 1;
 const float MIN_DISTANCE_TO_WALL = 0.5 * IDEAL_DISTANCE_TO_WALL;
