@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
     cv_bridge
 )
 
-find_package(OpenCV)
+find_package(OpenCV REQUIRED)
 
 catkin_package(
     LIBRARIES
@@ -37,4 +37,8 @@ add_executable(simple_reactive_robot
 target_link_libraries(
     simple_reactive_robot
     ${catkin_LIBRARIES}
+)
+target_link_libraries(
+    simple_reactive_robot
+    ${OpenCV_LIBRARIES}
 )

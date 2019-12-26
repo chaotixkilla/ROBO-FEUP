@@ -14,6 +14,8 @@ SimpleReactiveRobot::SimpleReactiveRobot(char* operation)
             break;
         case 2:
             ROS_INFO_STREAM("LINE FOLLOWING INITIALIZED");
+            publisher = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+            subscriber = nh.subscribe("/camera/rgb/image_raw", 1, &SimpleReactiveRobot::imageCallback, this);
             break;
         case 3:
             ROS_INFO_STREAM("OBJECT FOLLOWING INITIALIZED");
@@ -89,4 +91,25 @@ void SimpleReactiveRobot::laserCallback(const sensor_msgs::LaserScan &scan)
     }
 
     this->getPublisher().publish(message);
+}
+
+void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
+    cv_bridge::CvImagePtr cv_pointer;
+    
+    try {
+        cv_pointer = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    } catch(cv_bridge::Exception &e) {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+    
+    cv::Mat img = cv_pointer->image;
+
+    /*if(img.empty()) {
+        ROS_INFO_STREAM("IMAGE ERROR");
+    } else {
+        ROS_INFO_STREAM("NO IMAGE ERROR");
+        cv::imshow("Robot View", img);
+        cv::waitKey(0);
+    }*/
 }
