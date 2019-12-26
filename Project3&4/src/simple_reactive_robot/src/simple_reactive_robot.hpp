@@ -16,7 +16,7 @@ private:
     bool alreadyCheckedSide;
 
 public:
-    SimpleReactiveRobot();
+    SimpleReactiveRobot(char* operation);
 
     ~SimpleReactiveRobot();
 

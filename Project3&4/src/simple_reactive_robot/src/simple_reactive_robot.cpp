@@ -2,11 +2,26 @@
 
 using namespace std;
 
-SimpleReactiveRobot::SimpleReactiveRobot()
+SimpleReactiveRobot::SimpleReactiveRobot(char* operation)
 {
-    publisher = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
-    subscriber = nh.subscribe("/scan", 1000, &SimpleReactiveRobot::laserCallback, this);
-    alreadyCheckedSide = false;
+    int aux = atoi(operation);
+    switch(aux) {
+        case 1:
+            ROS_INFO_STREAM("WALL FOLLOWING INITIALIZED");
+            publisher = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
+            subscriber = nh.subscribe("/scan", 1000, &SimpleReactiveRobot::laserCallback, this);
+            alreadyCheckedSide = false;
+            break;
+        case 2:
+            ROS_INFO_STREAM("LINE FOLLOWING INITIALIZED");
+            break;
+        case 3:
+            ROS_INFO_STREAM("OBJECT FOLLOWING INITIALIZED");
+            break;
+        default:
+            ROS_INFO_STREAM("ERROR: Invalid Operation Mode on Simple Reactive Robot");
+            break;
+    }
 }
 
 SimpleReactiveRobot::~SimpleReactiveRobot()

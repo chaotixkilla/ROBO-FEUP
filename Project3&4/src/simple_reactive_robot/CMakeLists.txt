@@ -6,7 +6,11 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     sensor_msgs
     geometry_msgs
+    nav_msgs
+    cv_bridge
 )
+
+find_package(OpenCV)
 
 catkin_package(
     LIBRARIES
@@ -14,6 +18,8 @@ catkin_package(
     roscpp
     sensor_msgs
     geometry_msgs
+    nav_msgs
+    cv_bridge
 )
 
 include_directories(

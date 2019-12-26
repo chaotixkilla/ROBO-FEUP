@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
     //Initialize the ROS system.
     ros::init(argc, argv, "simple_reactive_robot");
 
-    SimpleReactiveRobot robot;
+    SimpleReactiveRobot robot(argv[1]);
 
     ros::spin();
 }
