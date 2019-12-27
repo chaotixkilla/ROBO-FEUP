@@ -94,6 +94,8 @@ void SimpleReactiveRobot::laserCallback(const sensor_msgs::LaserScan &scan)
 }
 
 void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
+    cv::Scalar yellow1 = cv::Scalar(20, 100, 100);
+    cv::Scalar yellow2 = cv::Scalar(30, 255, 255);
     cv_bridge::CvImagePtr cv_pointer;
     
     try {
@@ -105,11 +107,40 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
     
     cv::Mat img = cv_pointer->image;
 
-    /*if(img.empty()) {
-        ROS_INFO_STREAM("IMAGE ERROR");
+    cv::Mat hsvImage, gaussBlurredImage, maskedImage, gaussBlurredImageAux;
+    cv::GaussianBlur(img, gaussBlurredImage, cv::Size(3, 3), 0.1, 0.1);
+    int imageWidth = gaussBlurredImage.size().width;
+    int imageHeight = gaussBlurredImage.size().height;
+    cv::cvtColor(gaussBlurredImage, hsvImage, CV_BGR2HSV);
+    cv::inRange(hsvImage, yellow1, yellow2, maskedImage);
+    maskedImage(cv::Rect(0, 0, imageWidth, 0.85 * imageHeight)) = 0;
+
+    cv::Moments m = cv::moments(maskedImage);
+    cv::Point centroid(m.m10/m.m00, m.m01/m.m00);
+    cv::circle(maskedImage, centroid, 5, cv::Scalar(128, 0, 0), -1); //show circle on screen
+
+    geometry_msgs::Twist message;
+    if(centroid.x < imageWidth/2 - 50) {
+        //line is on left
+        ROS_INFO_STREAM("Line on the left");
+        message.linear.x = 0.1;
+        message.angular.z = 0.15;
+    } else if(centroid.x > imageWidth/2 + 50) {
+        //line is on right
+        ROS_INFO_STREAM("Line on the right");
+        message.linear.x = 0.1;
+        message.angular.z = -0.15;
     } else {
-        ROS_INFO_STREAM("NO IMAGE ERROR");
-        cv::imshow("Robot View", img);
-        cv::waitKey(0);
-    }*/
+        //line is centered
+        ROS_INFO_STREAM("Line in front");
+        message.linear.x = 0.1;
+        message.angular.z = 0.0;
+    }
+
+    publisher.publish(message);
+
+    //cv::imshow("Robot View", gaussBlurredImage);
+    cv::namedWindow("Masked View", CV_WINDOW_NORMAL);
+    cv::imshow("Masked View", maskedImage);
+    cv::waitKey(30);
 }
