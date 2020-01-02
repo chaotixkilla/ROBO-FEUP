@@ -94,6 +94,8 @@ void SimpleReactiveRobot::laserCallback(const sensor_msgs::LaserScan &scan)
 }
 
 void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
+    const int WIDTH_TOLERANCE = 50;
+
     cv::Scalar yellow1 = cv::Scalar(20, 100, 100);
     cv::Scalar yellow2 = cv::Scalar(30, 255, 255);
     cv_bridge::CvImagePtr cv_pointer;
@@ -123,6 +125,7 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
     if(centroid.x < imageWidth/2 - 50) {
         //line is on left
         ROS_INFO_STREAM("Line on the left");
+        //message.linear.x = centroid.x * (MIN_LINEAR_VELOCITY - MAX_LINEAR_VELOCITY)/(imageWidth/2 - 50) + (imageWidth/2 * MAX_LINEAR_VELOCITY - 50 * MIN_LINEAR_VELOCITY)/(imageWidth/2 - 50);
         message.linear.x = 0.1;
         message.angular.z = 0.15;
     } else if(centroid.x > imageWidth/2 + 50) {
@@ -135,6 +138,15 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
         ROS_INFO_STREAM("Line in front");
         message.linear.x = 0.1;
         message.angular.z = 0.0;
+    }
+
+    if (message.linear.x > MAX_LINEAR_VELOCITY)
+    {
+        message.linear.x = MAX_LINEAR_VELOCITY;
+    }
+    else if (message.linear.x < MIN_LINEAR_VELOCITY)
+    {
+        message.linear.x = MIN_LINEAR_VELOCITY;
     }
 
     publisher.publish(message);
