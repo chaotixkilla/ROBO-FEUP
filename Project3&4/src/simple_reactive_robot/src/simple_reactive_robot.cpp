@@ -94,8 +94,6 @@ void SimpleReactiveRobot::laserCallback(const sensor_msgs::LaserScan &scan)
 }
 
 void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
-    const int WIDTH_TOLERANCE = 50;
-
     cv::Scalar yellow1 = cv::Scalar(20, 100, 100);
     cv::Scalar yellow2 = cv::Scalar(30, 255, 255);
     cv_bridge::CvImagePtr cv_pointer;
@@ -115,30 +113,33 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
     int imageHeight = gaussBlurredImage.size().height;
     cv::cvtColor(gaussBlurredImage, hsvImage, CV_BGR2HSV);
     cv::inRange(hsvImage, yellow1, yellow2, maskedImage);
-    maskedImage(cv::Rect(0, 0, imageWidth, 0.85 * imageHeight)) = 0;
+    maskedImage(cv::Rect(0, 0, imageWidth, 0.65 * imageHeight)) = 0;
 
     cv::Moments m = cv::moments(maskedImage);
     cv::Point centroid(m.m10/m.m00, m.m01/m.m00);
     cv::circle(maskedImage, centroid, 5, cv::Scalar(128, 0, 0), -1); //show circle on screen
 
     geometry_msgs::Twist message;
-    if(centroid.x < imageWidth/2 - 50) {
+
+    const int WIDTH_TOLERANCE = imageWidth/2 * 0.1;
+    if(centroid.x < imageWidth/2 - WIDTH_TOLERANCE) {
         //line is on left
-        ROS_INFO_STREAM("Line on the left");
-        //message.linear.x = centroid.x * (MIN_LINEAR_VELOCITY - MAX_LINEAR_VELOCITY)/(imageWidth/2 - 50) + (imageWidth/2 * MAX_LINEAR_VELOCITY - 50 * MIN_LINEAR_VELOCITY)/(imageWidth/2 - 50);
-        message.linear.x = 0.1;
-        message.angular.z = 0.15;
-    } else if(centroid.x > imageWidth/2 + 50) {
+        //ROS_INFO_STREAM("Line on the left");
+        message.linear.x = (MAX_LINEAR_VELOCITY/2 * WIDTH_TOLERANCE)/abs(centroid.x - imageWidth/2);
+        message.angular.z = 0.25;
+    } else if(centroid.x > imageWidth/2 + WIDTH_TOLERANCE) {
         //line is on right
-        ROS_INFO_STREAM("Line on the right");
-        message.linear.x = 0.1;
-        message.angular.z = -0.15;
+        //ROS_INFO_STREAM("Line on the right");
+        message.linear.x = (MAX_LINEAR_VELOCITY/2 * WIDTH_TOLERANCE)/abs(centroid.x - imageWidth/2);
+        message.angular.z = -0.25;
     } else {
         //line is centered
-        ROS_INFO_STREAM("Line in front");
-        message.linear.x = 0.1;
+        //ROS_INFO_STREAM("Line in front");
+        message.linear.x = MAX_LINEAR_VELOCITY/2;
         message.angular.z = 0.0;
     }
+
+    //printf("distancia: %d\n", abs(centroid.x - imageWidth/2));
 
     if (message.linear.x > MAX_LINEAR_VELOCITY)
     {
@@ -149,9 +150,13 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
         message.linear.x = MIN_LINEAR_VELOCITY;
     }
 
+    //ROS_INFO_STREAM(message.linear.x);
+
     publisher.publish(message);
 
-    //cv::imshow("Robot View", gaussBlurredImage);
+
+    cv::namedWindow("Robot View", CV_WINDOW_NORMAL);
+    cv::imshow("Robot View", gaussBlurredImage);
     cv::namedWindow("Masked View", CV_WINDOW_NORMAL);
     cv::imshow("Masked View", maskedImage);
     cv::waitKey(30);
