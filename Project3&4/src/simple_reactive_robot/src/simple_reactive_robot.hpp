@@ -4,6 +4,8 @@
 #include "ros/ros.h"
 #include <geometry_msgs/Twist.h>
 #include "wall_following.hpp"
+#include "line_following.hpp"
+#include "object_following.hpp"
 #include <cv_bridge/cv_bridge.h>
 #include <opencv/cv.hpp>
 #include <iostream>
@@ -17,6 +19,7 @@ private:
     sensor_msgs::LaserScan laserScan;
     bool isWallLeftOnStart;
     bool alreadyCheckedSide;
+    int opMode;
     //sensor_msgs::Image img;
 
 public:
