@@ -169,6 +169,7 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
             cv::waitKey(30);
             break;
         case 2:
+        /*
             cv::Scalar yellow1 = cv::Scalar(20, 100, 100);
             cv::Scalar yellow2 = cv::Scalar(30, 255, 255);
             cv_bridge::CvImagePtr cv_pointer;
@@ -234,6 +235,7 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
             cv::namedWindow("Masked View", CV_WINDOW_NORMAL);
             cv::imshow("Masked View", maskedImage);
             cv::waitKey(30);
+            */
             break;
         default:
             ROS_INFO_STREAM("ERROR: Invalid Operation Mode on Simple Reactive Robot");
