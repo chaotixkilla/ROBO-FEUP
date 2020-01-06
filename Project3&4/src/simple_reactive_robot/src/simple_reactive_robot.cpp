@@ -169,73 +169,7 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
             cv::waitKey(30);
             break;
         case 2:
-        /*
-            cv::Scalar yellow1 = cv::Scalar(20, 100, 100);
-            cv::Scalar yellow2 = cv::Scalar(30, 255, 255);
-            cv_bridge::CvImagePtr cv_pointer;
-            
-            try {
-                cv_pointer = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-            } catch(cv_bridge::Exception &e) {
-                ROS_ERROR("cv_bridge exception: %s", e.what());
-                return;
-            }
-            
-            cv::Mat img = cv_pointer->image;
 
-            cv::Mat hsvImage, gaussBlurredImage, maskedImage, gaussBlurredImageAux;
-            cv::GaussianBlur(img, gaussBlurredImage, cv::Size(3, 3), 0.1, 0.1);
-            int imageWidth = gaussBlurredImage.size().width;
-            int imageHeight = gaussBlurredImage.size().height;
-            cv::cvtColor(gaussBlurredImage, hsvImage, CV_BGR2HSV);
-            cv::inRange(hsvImage, yellow1, yellow2, maskedImage);
-
-            cv::Moments m = cv::moments(maskedImage);
-            cv::Point centroid(m.m10/m.m00, m.m01/m.m00);
-            cv::circle(maskedImage, centroid, 5, cv::Scalar(128, 0, 0), -1); //show circle on screen
-
-            geometry_msgs::Twist message;
-
-            const int WIDTH_TOLERANCE = imageWidth/2 * 0.1;
-            if(centroid.x < imageWidth/2 - WIDTH_TOLERANCE) {
-                //line is on left
-                //ROS_INFO_STREAM("Line on the left");
-                message.linear.x = (MAX_LINEAR_VELOCITY/2 * WIDTH_TOLERANCE)/abs(centroid.x - imageWidth/2);
-                message.angular.z = 0.25;
-            } else if(centroid.x > imageWidth/2 + WIDTH_TOLERANCE) {
-                //line is on right
-                //ROS_INFO_STREAM("Line on the right");
-                message.linear.x = (MAX_LINEAR_VELOCITY/2 * WIDTH_TOLERANCE)/abs(centroid.x - imageWidth/2);
-                message.angular.z = -0.25;
-            } else {
-                //line is centered
-                //ROS_INFO_STREAM("Line in front");
-                message.linear.x = MAX_LINEAR_VELOCITY/2;
-                message.angular.z = 0.0;
-            }
-
-            //printf("distancia: %d\n", abs(centroid.x - imageWidth/2));
-
-            if (message.linear.x > MAX_LINEAR_VELOCITY)
-            {
-                message.linear.x = MAX_LINEAR_VELOCITY;
-            }
-            else if (message.linear.x < MIN_LINEAR_VELOCITY)
-            {
-                message.linear.x = MIN_LINEAR_VELOCITY;
-            }
-
-            //ROS_INFO_STREAM(message.linear.x);
-
-            publisher.publish(message);
-
-
-            cv::namedWindow("Robot View", CV_WINDOW_NORMAL);
-            cv::imshow("Robot View", gaussBlurredImage);
-            cv::namedWindow("Masked View", CV_WINDOW_NORMAL);
-            cv::imshow("Masked View", maskedImage);
-            cv::waitKey(30);
-            */
             break;
         default:
             ROS_INFO_STREAM("ERROR: Invalid Operation Mode on Simple Reactive Robot");
