@@ -9,5 +9,12 @@ int main(int argc, char** argv) {
 
     SimpleReactiveRobot robot(argv[1]);
 
-    ros::spin();
+    ros::Rate rosRate = 10;
+
+    //ros::spin();
+
+    while(ros::ok()){
+        ros::spinOnce();
+        rosRate.sleep();
+    }
 }
