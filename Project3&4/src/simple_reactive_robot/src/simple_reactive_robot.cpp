@@ -20,7 +20,10 @@ SimpleReactiveRobot::SimpleReactiveRobot(char *operation)
         subscriber = nh.subscribe("/camera/rgb/image_raw", 1, &SimpleReactiveRobot::imageCallback, this);
         break;
     case 3:
-
+        ROS_INFO_STREAM("OBJECT FOLLOWING INITIALIZED");
+        opMode = 2;
+        publisher = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+        subscriber = nh.subscribe("/camera/rgb/image_raw", 1, &SimpleReactiveRobot::imageCallback, this);
         break;
     default:
         ROS_INFO_STREAM("ERROR: Invalid Operation Mode on Simple Reactive Robot");
@@ -98,10 +101,25 @@ void SimpleReactiveRobot::laserCallback(const sensor_msgs::LaserScan &scan)
 
 void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg)
 {
-
-    cv::Scalar yellow1 = cv::Scalar(20, 100, 100);
-    cv::Scalar yellow2 = cv::Scalar(30, 255, 255);
+    cv::Scalar color1;
+    cv::Scalar color2;
     cv_bridge::CvImagePtr cv_pointer;
+
+    if (opMode == 1)
+    {
+        color1 = cv::Scalar(20, 100, 100);
+        color2 = cv::Scalar(30, 255, 255);
+    }
+    else if (opMode == 2)
+    {
+        color1 = cv::Scalar(20, 100, 100);
+        color2 = cv::Scalar(30, 255, 255);
+    }
+    else
+    {
+        ROS_INFO_STREAM("ERROR: Invalid Operation Mode on Simple Reactive Robot");
+        return;
+    }
 
     try
     {
@@ -120,8 +138,12 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg)
     int imageWidth = gaussBlurredImage.size().width;
     int imageHeight = gaussBlurredImage.size().height;
     cv::cvtColor(gaussBlurredImage, hsvImage, CV_BGR2HSV);
-    cv::inRange(hsvImage, yellow1, yellow2, maskedImage);
-    maskedImage(cv::Rect(0, 0, imageWidth, 0.65 * imageHeight)) = 0;
+    cv::inRange(hsvImage, color1, color2, maskedImage);
+
+    if (opMode == 1)  //cut top 65% of image
+    {
+        maskedImage(cv::Rect(0, 0, imageWidth, 0.65 * imageHeight)) = 0;
+    }
 
     cv::Moments m = cv::moments(maskedImage);
     cv::Point centroid(m.m10 / m.m00, m.m01 / m.m00);
