@@ -23,7 +23,7 @@ SimpleReactiveRobot::SimpleReactiveRobot(char *operation)
         ROS_INFO_STREAM("OBJECT FOLLOWING INITIALIZED");
         opMode = 2;
         publisher = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
-        subscriber = nh.subscribe("/camera/rgb/image_raw", 1, &SimpleReactiveRobot::imageCallback, this);
+        subscriber = nh.subscribe("/camera/color/image_raw", 1, &SimpleReactiveRobot::imageCallback, this);
         break;
     default:
         ROS_INFO_STREAM("ERROR: Invalid Operation Mode on Simple Reactive Robot");
@@ -112,8 +112,8 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg)
     }
     else if (opMode == 2)
     {
-        color1 = cv::Scalar(20, 100, 100);
-        color2 = cv::Scalar(30, 255, 255);
+        color1 = cv::Scalar(170, 120, 120);
+        color2 = cv::Scalar(190, 255, 255);
     }
     else
     {
@@ -156,21 +156,21 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg)
     {
         //line is on left
         //ROS_INFO_STREAM("Line on the left");
-        message.linear.x = (MAX_LINEAR_VELOCITY / 2 * WIDTH_TOLERANCE) / abs(centroid.x - imageWidth / 2);
-        message.angular.z = 0.25;
+        message.linear.x = (MAX_LINEAR_VELOCITY * WIDTH_TOLERANCE) / abs(centroid.x - imageWidth / 2);
+        message.angular.z = (MAX_LINEAR_VELOCITY - message.linear.x) / MAX_LINEAR_VELOCITY * MAX_ANGULAR_VELOCITY / 2;
     }
     else if (centroid.x > imageWidth / 2 + WIDTH_TOLERANCE)
     {
         //line is on right
         //ROS_INFO_STREAM("Line on the right");
-        message.linear.x = (MAX_LINEAR_VELOCITY / 2 * WIDTH_TOLERANCE) / abs(centroid.x - imageWidth / 2);
-        message.angular.z = -0.25;
+        message.linear.x = (MAX_LINEAR_VELOCITY * WIDTH_TOLERANCE) / abs(centroid.x - imageWidth / 2);
+        message.angular.z = - (MAX_LINEAR_VELOCITY - message.linear.x) / MAX_LINEAR_VELOCITY * MAX_ANGULAR_VELOCITY / 2;
     }
     else
     {
         //line is centered
         //ROS_INFO_STREAM("Line in front");
-        message.linear.x = MAX_LINEAR_VELOCITY / 2;
+        message.linear.x = MAX_LINEAR_VELOCITY;
         message.angular.z = 0.0;
     }
 
