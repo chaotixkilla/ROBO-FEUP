@@ -10,9 +10,7 @@ SimpleReactiveRobot::SimpleReactiveRobot(char *operation)
     case 1:
         ROS_INFO_STREAM("WALL FOLLOWING INITIALIZED");
         publisher = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
-        ROS_INFO_STREAM("WALL FOLLOWING INITIALIZED");
         subscriber = nh.subscribe("/scan", 1, &SimpleReactiveRobot::laserCallback, this);
-        ROS_INFO_STREAM("WALL FOLLOWING INITIALIZED");
         alreadyCheckedSide = false;
         break;
     case 2:
@@ -94,7 +92,7 @@ void SimpleReactiveRobot::laserCallback(const sensor_msgs::LaserScan &scan)
         message.angular.z = -MAX_ANGULAR_VELOCITY;
     }
 
-    ROS_INFO_STREAM(message);
+    ROS_INFO_STREAM(minimumDistance);
     this->getPublisher().publish(message);
 }
 

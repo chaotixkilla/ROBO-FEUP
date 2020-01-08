@@ -14,7 +14,7 @@ int getShortestLaserScanIndex(sensor_msgs::LaserScan laserScan)
 
     for (int i = 0; i < laserScan.ranges.size(); i++)
     {
-        if (laserScan.ranges[i] < shortestLaserScan)
+        if (laserScan.ranges[i] < shortestLaserScan && laserScan.ranges[i] >= laserScan.range_min)
         {
             shortestLaserScan = laserScan.ranges[i];
             shortestLaserScanIndex = i;
