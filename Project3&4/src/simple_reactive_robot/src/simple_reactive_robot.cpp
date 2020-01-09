@@ -46,7 +46,7 @@ void SimpleReactiveRobot::laserCallback(const sensor_msgs::LaserScan &scan)
     int index = getShortestLaserScanIndex(this->laserScan);
     float minimumDistance = this->laserScan.ranges[index];
 
-    if (!alreadyCheckedSide)
+    if (!alreadyCheckedSide && minimumDistance >= this->laserScan.range_min)
     {
         this->isWallLeftOnStart = isWallLeft(this->laserScan);
         alreadyCheckedSide = true;
@@ -56,12 +56,18 @@ void SimpleReactiveRobot::laserCallback(const sensor_msgs::LaserScan &scan)
 
     geometry_msgs::Twist message;
 
-    if (minimumDistance < this->laserScan.range_max)
+    if (minimumDistance < this->laserScan.range_max && minimumDistance >= this->laserScan.range_min)
     {
-
         if (isInFront(this->laserScan, index))
         {
-            message.linear.x = (minimumDistance - ROBOT_RADIUS - MIN_DISTANCE_TO_WALL) * MAX_LINEAR_VELOCITY * abs(sin(degToRad(getScanLineAngle(this->laserScan, index)))) / sin(degToRad(80.0)) / (IDEAL_DISTANCE_TO_WALL - MIN_DISTANCE_TO_WALL);
+            message.linear.x = 
+            MAX_LINEAR_VELOCITY * 
+            
+            (minimumDistance - ROBOT_RADIUS - MIN_DISTANCE_TO_WALL) / 
+            (IDEAL_DISTANCE_TO_WALL - MIN_DISTANCE_TO_WALL) * 
+            
+            abs(sin(degToRad(getScanLineAngle(this->laserScan, index)))) / 
+            sin(degToRad(80.0));
         }
         else
         {
@@ -77,13 +83,12 @@ void SimpleReactiveRobot::laserCallback(const sensor_msgs::LaserScan &scan)
             message.linear.x = MIN_LINEAR_VELOCITY;
         }
 
-        float aux = (modifier * 10 * (sin(degToRad(90 - getScanLineAngle(this->laserScan, index))) - (minimumDistance - ROBOT_RADIUS - IDEAL_DISTANCE_TO_WALL)) * message.linear.x);
-        message.angular.z = aux;
+        message.angular.z = (modifier * 2 * (sin(degToRad(90 - getScanLineAngle(this->laserScan, index))) - (minimumDistance - ROBOT_RADIUS - IDEAL_DISTANCE_TO_WALL)));
     }
     else
     {
-        message.linear.x = 0.1;
-        message.angular.z = 0.0;
+        message.linear.x = MAX_LINEAR_VELOCITY;
+        message.angular.z = 0.1;
     }
 
     if (message.angular.z > MAX_ANGULAR_VELOCITY)
@@ -95,7 +100,6 @@ void SimpleReactiveRobot::laserCallback(const sensor_msgs::LaserScan &scan)
         message.angular.z = -MAX_ANGULAR_VELOCITY;
     }
 
-    ROS_INFO_STREAM(minimumDistance);
     this->getPublisher().publish(message);
 }
 
@@ -140,7 +144,7 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg)
     cv::cvtColor(gaussBlurredImage, hsvImage, CV_BGR2HSV);
     cv::inRange(hsvImage, color1, color2, maskedImage);
 
-    if (opMode == 1)  //cut top 65% of image
+    if (opMode == 1) //cut top 65% of image
     {
         maskedImage(cv::Rect(0, 0, imageWidth, 0.65 * imageHeight)) = 0;
     }
@@ -151,30 +155,9 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg)
 
     geometry_msgs::Twist message;
 
-    const int WIDTH_TOLERANCE = imageWidth / 2 * 0.1;
-    if (centroid.x < imageWidth / 2 - WIDTH_TOLERANCE)
-    {
-        //line is on left
-        //ROS_INFO_STREAM("Line on the left");
-        message.linear.x = (MAX_LINEAR_VELOCITY * WIDTH_TOLERANCE) / abs(centroid.x - imageWidth / 2);
-        message.angular.z = (MAX_LINEAR_VELOCITY - message.linear.x) / MAX_LINEAR_VELOCITY * MAX_ANGULAR_VELOCITY / 2;
-    }
-    else if (centroid.x > imageWidth / 2 + WIDTH_TOLERANCE)
-    {
-        //line is on right
-        //ROS_INFO_STREAM("Line on the right");
-        message.linear.x = (MAX_LINEAR_VELOCITY * WIDTH_TOLERANCE) / abs(centroid.x - imageWidth / 2);
-        message.angular.z = - (MAX_LINEAR_VELOCITY - message.linear.x) / MAX_LINEAR_VELOCITY * MAX_ANGULAR_VELOCITY / 2;
-    }
-    else
-    {
-        //line is centered
-        //ROS_INFO_STREAM("Line in front");
-        message.linear.x = MAX_LINEAR_VELOCITY;
-        message.angular.z = 0.0;
-    }
+    const int WIDTH_TOLERANCE = imageWidth * 0.1;
 
-    //printf("distancia: %d\n", abs(centroid.x - imageWidth/2));
+    message.linear.x = MAX_LINEAR_VELOCITY * WIDTH_TOLERANCE / abs(centroid.x - imageWidth / 2);
 
     if (message.linear.x > MAX_LINEAR_VELOCITY)
     {
@@ -185,7 +168,18 @@ void SimpleReactiveRobot::imageCallback(const sensor_msgs::ImageConstPtr &msg)
         message.linear.x = MIN_LINEAR_VELOCITY;
     }
 
-    //ROS_INFO_STREAM(message.linear.x);
+    if (centroid.x < imageWidth / 2 - WIDTH_TOLERANCE)
+    {
+        message.angular.z = IDEAL_ANGULAR_VELOCITY * (MAX_LINEAR_VELOCITY - message.linear.x) / MAX_LINEAR_VELOCITY;
+    }
+    else if (centroid.x > imageWidth / 2 + WIDTH_TOLERANCE)
+    {
+        message.angular.z = -IDEAL_ANGULAR_VELOCITY * (MAX_LINEAR_VELOCITY - message.linear.x) / MAX_LINEAR_VELOCITY;
+    }
+    else
+    {
+        message.angular.z = 0.0;
+    }
 
     publisher.publish(message);
 

@@ -27,10 +27,11 @@ int getShortestLaserScanIndex(sensor_msgs::LaserScan laserScan)
 bool isWallLeft(sensor_msgs::LaserScan laserScan)
 {
     int index = getShortestLaserScanIndex(laserScan);
-    return getScanLineAngle(laserScan, index) > 0;
+    return getScanLineAngle(laserScan, index) < 180;
 }
 
 bool isInFront(sensor_msgs::LaserScan laserScan, int shortestDistanceIndex)
 {
-    return getScanLineAngle(laserScan, shortestDistanceIndex) < 80.0 && getScanLineAngle(laserScan, shortestDistanceIndex) > -80.0;
+    ROS_INFO_STREAM(getScanLineAngle(laserScan, shortestDistanceIndex));
+    return getScanLineAngle(laserScan, shortestDistanceIndex) < 80.0 || getScanLineAngle(laserScan, shortestDistanceIndex) > 280.0;
 }
